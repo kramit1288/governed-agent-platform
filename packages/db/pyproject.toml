@@ -1,0 +1,9 @@
+[project]
+name = "governed-agent-db"
+version = "0.1.0"
+description = "Database ownership package for the governed agent platform."
+requires-python = ">=3.12"
+dependencies = [
+  "alembic>=1.14,<2.0",
+  "sqlalchemy>=2.0,<3.0",
+]

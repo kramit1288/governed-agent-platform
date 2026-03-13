@@ -1,0 +1,5 @@
+[project]
+name = "governed-agent-shared"
+version = "0.1.0"
+description = "Shared models and utilities for the governed agent platform."
+requires-python = ">=3.12"

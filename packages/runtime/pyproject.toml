@@ -1,0 +1,5 @@
+[project]
+name = "governed-agent-runtime"
+version = "0.1.0"
+description = "Runtime control package."
+requires-python = ">=3.12"

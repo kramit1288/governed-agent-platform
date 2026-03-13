@@ -1,0 +1,5 @@
+[project]
+name = "governed-agent-tracing"
+version = "0.1.0"
+description = "Tracing package for append-only run events."
+requires-python = ">=3.12"

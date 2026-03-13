@@ -1,0 +1,5 @@
+[project]
+name = "governed-agent-gateway"
+version = "0.1.0"
+description = "Model gateway and routing package."
+requires-python = ">=3.12"

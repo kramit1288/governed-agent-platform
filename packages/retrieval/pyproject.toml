@@ -1,0 +1,8 @@
+[project]
+name = "governed-agent-retrieval"
+version = "0.1.0"
+description = "Retrieval package for documents and citations."
+requires-python = ">=3.12"
+dependencies = [
+  "pgvector>=0.3,<1.0",
+]
