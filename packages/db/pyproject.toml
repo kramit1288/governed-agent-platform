@@ -5,5 +5,7 @@ description = "Database ownership package for the governed agent platform."
 requires-python = ">=3.12"
 dependencies = [
   "alembic>=1.14,<2.0",
+  "psycopg[binary]>=3.2,<4.0",
+  "pytest>=8.3,<9.0",
   "sqlalchemy>=2.0,<3.0",
 ]

@@ -6,7 +6,7 @@ dev-api:
 	uvicorn apps.api.app.main:app --reload --host 0.0.0.0 --port 8000
 
 test:
-	pytest apps/api/tests
+	pytest apps/api/tests packages/db/tests
 
 dev-console:
 	cd apps/console && npm run dev

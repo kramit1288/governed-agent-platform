@@ -53,13 +53,23 @@ scripts/        Development and maintenance scripts
 5. Run tests with `make test`.
 6. Start the console with `make dev-console`.
 
+## Database foundation
+
+Phase 2 establishes the schema foundation in `packages/db` for:
+
+- runs and append-only run events
+- tool invocations and approval requests
+- prompt version storage
+- eval cases, eval runs, and eval results
+
+Repositories in this package stay intentionally small and persistence-only. Orchestration logic, approval policy, and business workflows remain outside the db layer.
+
 ## Current status
 
-This bootstrap intentionally includes only:
+This bootstrap currently includes:
 
 - a minimal FastAPI app with `/health`
-- one API test
-- package scaffolding with docstring-only placeholders
+- initial PostgreSQL schema models and Alembic migration
+- focused repository methods for runs, approvals, and eval storage
+- API and db pytest coverage
 - architecture docs and ADRs
-
-Business logic is deliberately deferred.
