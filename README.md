@@ -64,6 +64,17 @@ Phase 2 establishes the schema foundation in `packages/db` for:
 
 Repositories in this package stay intentionally small and persistence-only. Orchestration logic, approval policy, and business workflows remain outside the db layer.
 
+## Orchestrator lifecycle
+
+Phase 3 adds the explicit single-agent lifecycle skeleton in `packages/orchestrator` with:
+
+- a visible run state machine
+- deterministic step ordering
+- approval pause and resume handling
+- placeholder collaborator protocols for gateway, retrieval, tools, tracing, and runtime hooks
+
+The flow is deliberately narrow and testable. It is our own orchestration code, not a framework-managed workflow graph.
+
 ## Current status
 
 This bootstrap currently includes:
@@ -71,5 +82,6 @@ This bootstrap currently includes:
 - a minimal FastAPI app with `/health`
 - initial PostgreSQL schema models and Alembic migration
 - focused repository methods for runs, approvals, and eval storage
-- API and db pytest coverage
+- explicit orchestrator state machine and lifecycle skeleton
+- API, db, and orchestrator pytest coverage
 - architecture docs and ADRs
