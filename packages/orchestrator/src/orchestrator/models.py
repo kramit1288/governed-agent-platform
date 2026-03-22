@@ -69,12 +69,26 @@ class ToolCall:
 
 @dataclass(slots=True)
 class ToolExecutionResult:
-    """Outcome of the placeholder tool execution stage."""
+    """Outcome of the tool execution stage."""
 
     outputs: list[dict[str, object]] = field(default_factory=list)
     requires_approval: bool = False
     approval_reason: str | None = None
     approval_preview: dict[str, object] | None = None
+    tool_records: list["ToolExecutionRecord"] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class ToolExecutionRecord:
+    """Audit-friendly tool execution record surfaced to the orchestrator."""
+
+    tool_name: str
+    status: str
+    tool_invocation_id: UUID | None = None
+    output: dict[str, object] | None = None
+    error: str | None = None
+    requires_approval: bool = False
+    preview_payload: dict[str, object] | None = None
 
 
 @dataclass(slots=True)
@@ -88,6 +102,8 @@ class RunContext:
     retrieved_context: list[RetrievedContext] = field(default_factory=list)
     planned_tools: list[ToolCall] = field(default_factory=list)
     tool_results: list[dict[str, object]] = field(default_factory=list)
+    tool_records: list[ToolExecutionRecord] = field(default_factory=list)
     response_text: str | None = None
     approval_request_id: UUID | None = None
+    pending_tool_invocation_id: UUID | None = None
     failure_reason: str | None = None

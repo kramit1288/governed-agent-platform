@@ -31,8 +31,10 @@ approval_status = sa.Enum(
 )
 tool_invocation_status = sa.Enum(
     "PENDING",
+    "APPROVAL_REQUIRED",
     "COMPLETED",
     "FAILED",
+    "CANCELED",
     name="tool_invocation_status",
     native_enum=False,
 )
@@ -134,6 +136,7 @@ def upgrade() -> None:
         sa.Column("run_id", sa.Uuid(), nullable=False),
         sa.Column("tool_name", sa.String(length=100), nullable=False),
         sa.Column("status", tool_invocation_status, nullable=False),
+        sa.Column("requires_approval", sa.Boolean(), nullable=False),
         sa.Column("input_payload", sa.JSON(), nullable=True),
         sa.Column("output_payload", sa.JSON(), nullable=True),
         sa.Column("error_message", sa.String(length=500), nullable=True),
@@ -151,7 +154,8 @@ def upgrade() -> None:
         sa.Column("tool_invocation_id", sa.Uuid(), nullable=True),
         sa.Column("status", approval_status, nullable=False),
         sa.Column("reason", sa.String(length=255), nullable=False),
-        sa.Column("preview_payload", sa.JSON(), nullable=True),
+        sa.Column("action_preview", sa.JSON(), nullable=True),
+        sa.Column("requested_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("decision_comment", sa.String(length=500), nullable=True),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("resolved_at", sa.DateTime(timezone=True), nullable=True),

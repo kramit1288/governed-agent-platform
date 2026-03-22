@@ -3,3 +3,6 @@ name = "governed-agent-tracing"
 version = "0.1.0"
 description = "Tracing package for append-only run events."
 requires-python = ">=3.12"
+dependencies = [
+  "pydantic>=2.11,<3.0",
+]

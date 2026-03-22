@@ -29,6 +29,7 @@ class ToolInvocation(TimestampMixin, Base):
         default=ToolInvocationStatus.PENDING,
         nullable=False,
     )
+    requires_approval: Mapped[bool] = mapped_column(default=False, nullable=False)
     input_payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     output_payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     error_message: Mapped[str | None] = mapped_column(String(500), nullable=True)

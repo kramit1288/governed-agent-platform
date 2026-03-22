@@ -5,7 +5,15 @@ from __future__ import annotations
 from typing import Protocol
 from uuid import UUID
 
-from orchestrator.models import ApprovalDecision, AgentTask, RetrievedContext, RunContext, RunState, ToolCall, ToolExecutionResult
+from orchestrator.models import (
+    ApprovalDecision,
+    AgentTask,
+    RetrievedContext,
+    RunContext,
+    RunState,
+    ToolCall,
+    ToolExecutionResult,
+)
 
 
 class RunStore(Protocol):
@@ -26,11 +34,24 @@ class ApprovalStore(Protocol):
         *,
         run_id: UUID,
         reason: str,
-        preview_payload: dict[str, object] | None = None,
+        action_preview: dict[str, object] | None = None,
+        tool_invocation_id: UUID | None = None,
     ) -> object:
         ...
 
     def get_approval_decision(self, approval_request_id: UUID) -> ApprovalDecision:
+        ...
+
+    def get_approval_request(self, approval_request_id: UUID) -> object | None:
+        ...
+
+    def resolve_approval_request(
+        self,
+        approval_request_id: UUID,
+        *,
+        status: object,
+        decision_comment: str | None = None,
+    ) -> object | None:
         ...
 
 
@@ -41,6 +62,9 @@ class AIGateway(Protocol):
         ...
 
     def generate_response(self, context: RunContext) -> str:
+        ...
+
+    def describe_route(self, context: RunContext) -> dict[str, object] | None:
         ...
 
 
@@ -70,6 +94,9 @@ class TraceRecorder(Protocol):
 
 class RuntimeResumeHooks(Protocol):
     """Runtime notifications for waiting and resumed runs."""
+
+    def store_waiting_context(self, context: RunContext) -> None:
+        ...
 
     def on_waiting_for_approval(self, run_id: UUID, approval_request_id: UUID) -> None:
         ...

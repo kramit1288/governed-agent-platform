@@ -29,8 +29,10 @@ class ToolInvocationStatus(StrEnum):
     """Execution states for a tool invocation record."""
 
     PENDING = "PENDING"
+    APPROVAL_REQUIRED = "APPROVAL_REQUIRED"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+    CANCELED = "CANCELED"
 
 
 class EvalRunStatus(StrEnum):

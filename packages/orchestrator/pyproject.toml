@@ -3,4 +3,6 @@ name = "governed-agent-orchestrator"
 version = "0.1.0"
 description = "Explicit workflow orchestration package."
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+  "pydantic>=2.11,<3.0",
+]

@@ -38,7 +38,8 @@ class ApprovalRequest(TimestampMixin, Base):
         index=True,
     )
     reason: Mapped[str] = mapped_column(String(255), nullable=False)
-    preview_payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    action_preview: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     decision_comment: Mapped[str | None] = mapped_column(String(500), nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

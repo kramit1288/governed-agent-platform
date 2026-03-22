@@ -2,7 +2,17 @@
 
 from orchestrator.engine import OrchestratorEngine
 from orchestrator.errors import ApprovalResolutionError, InvalidStateTransitionError, OrchestratorError
-from orchestrator.models import AgentTask, ApprovalDecision, RetrievedContext, RunContext, RunState, RunStep, ToolCall, ToolExecutionResult
+from orchestrator.models import (
+    AgentTask,
+    ApprovalDecision,
+    RetrievedContext,
+    RunContext,
+    RunState,
+    RunStep,
+    ToolCall,
+    ToolExecutionRecord,
+    ToolExecutionResult,
+)
 from orchestrator.response_builder import ResponseBuilder
 from orchestrator.state_machine import OrchestratorStateMachine
 
@@ -20,5 +30,6 @@ __all__ = [
     "RunState",
     "RunStep",
     "ToolCall",
+    "ToolExecutionRecord",
     "ToolExecutionResult",
 ]

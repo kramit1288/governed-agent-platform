@@ -6,10 +6,21 @@ from dataclasses import dataclass
 from uuid import UUID, uuid4
 
 import pytest
+from db.enums import ApprovalStatus
+from tracing.events import TraceEventType
 
 from orchestrator.engine import OrchestratorEngine
 from orchestrator.errors import ApprovalResolutionError, InvalidStateTransitionError
-from orchestrator.models import AgentTask, ApprovalDecision, RetrievedContext, RunContext, RunState, ToolCall, ToolExecutionResult
+from orchestrator.models import (
+    AgentTask,
+    ApprovalDecision,
+    RetrievedContext,
+    RunContext,
+    RunState,
+    ToolCall,
+    ToolExecutionRecord,
+    ToolExecutionResult,
+)
 from orchestrator.state_machine import OrchestratorStateMachine
 
 
@@ -35,16 +46,40 @@ class FakeRunStore:
 class FakeApprovalStore:
     def __init__(self, decision: ApprovalDecision = ApprovalDecision.PENDING) -> None:
         self.decision = decision
-        self.created_requests: list[tuple[UUID, str, dict[str, object] | None]] = []
+        self.created_requests: list[tuple[UUID, str, dict[str, object] | None, UUID | None]] = []
         self._approval_id = uuid4()
+        self.decision_comment: str | None = None
 
-    def create_approval_request(self, *, run_id: UUID, reason: str, preview_payload: dict[str, object] | None = None) -> FakeApprovalRecord:
-        self.created_requests.append((run_id, reason, preview_payload))
+    def create_approval_request(
+        self,
+        *,
+        run_id: UUID,
+        reason: str,
+        action_preview: dict[str, object] | None = None,
+        tool_invocation_id: UUID | None = None,
+    ) -> FakeApprovalRecord:
+        self.created_requests.append((run_id, reason, action_preview, tool_invocation_id))
         return FakeApprovalRecord(id=self._approval_id)
 
     def get_approval_decision(self, approval_request_id: UUID) -> ApprovalDecision:
         assert approval_request_id == self._approval_id
         return self.decision
+
+    def get_approval_request(self, approval_request_id: UUID) -> object:
+        assert approval_request_id == self._approval_id
+        return type("ApprovalRecord", (), {"decision_comment": self.decision_comment})()
+
+    def resolve_approval_request(
+        self,
+        approval_request_id: UUID,
+        *,
+        status: ApprovalStatus,
+        decision_comment: str | None = None,
+    ) -> object:
+        assert approval_request_id == self._approval_id
+        self.decision = ApprovalDecision(status.value)
+        self.decision_comment = decision_comment
+        return type("ApprovalRecord", (), {"id": approval_request_id})()
 
 
 class FakeAIGateway:
@@ -53,6 +88,9 @@ class FakeAIGateway:
 
     def generate_response(self, context: RunContext) -> str:
         return f"response:{context.classification}:{len(context.tool_results)}"
+
+    def describe_route(self, context: RunContext) -> dict[str, object]:
+        return {"provider": "mock", "model": "mock-strong", "reason": "test"}
 
 
 class FakeRetrievalService:
@@ -72,13 +110,32 @@ class FakeToolExecutor:
         if self.should_fail:
             raise RuntimeError("tool execution failed")
         if self.requires_approval:
+            invocation_id = uuid4()
             return ToolExecutionResult(
                 outputs=[{"preview": True}],
                 requires_approval=True,
                 approval_reason="High-risk action",
                 approval_preview={"tool": "lookup_policy"},
+                tool_records=[
+                    ToolExecutionRecord(
+                        tool_name="lookup_policy",
+                        status="approval_required",
+                        tool_invocation_id=invocation_id,
+                        requires_approval=True,
+                        preview_payload={"tool": "lookup_policy"},
+                    )
+                ],
             )
-        return ToolExecutionResult(outputs=[{"tool": "lookup_policy", "status": "ok"}])
+        return ToolExecutionResult(
+            outputs=[{"tool": "lookup_policy", "status": "ok"}],
+            tool_records=[
+                ToolExecutionRecord(
+                    tool_name="lookup_policy",
+                    status="succeeded",
+                    output={"tool": "lookup_policy", "status": "ok"},
+                )
+            ],
+        )
 
 
 class FakeTraceRecorder:
@@ -91,9 +148,13 @@ class FakeTraceRecorder:
 
 class FakeRuntimeHooks:
     def __init__(self) -> None:
+        self.stored_contexts: list[RunContext] = []
         self.waiting_calls: list[tuple[UUID, UUID]] = []
         self.resumed_calls: list[UUID] = []
         self.completed_calls: list[tuple[UUID, RunState]] = []
+
+    def store_waiting_context(self, context: RunContext) -> None:
+        self.stored_contexts.append(context)
 
     def on_waiting_for_approval(self, run_id: UUID, approval_request_id: UUID) -> None:
         self.waiting_calls.append((run_id, approval_request_id))
@@ -140,7 +201,7 @@ def test_happy_path_completes_successfully() -> None:
     assert context.state is RunState.COMPLETED
     assert context.response_text == "response:retrieve_and_answer:1"
     assert [status for _, status, _ in run_store.status_updates] == ["IN_PROGRESS", "COMPLETED"]
-    assert any(event_type == "run.completed" for _, event_type, _ in trace_recorder.events)
+    assert any(event_type == TraceEventType.RUN_COMPLETED.value for _, event_type, _ in trace_recorder.events)
     assert runtime_hooks.completed_calls[-1][1] is RunState.COMPLETED
 
 
@@ -154,6 +215,8 @@ def test_approval_required_path_pauses_run() -> None:
     assert approval_store.created_requests[0][1] == "High-risk action"
     assert run_store.status_updates[-1][1] == "WAITING_FOR_APPROVAL"
     assert runtime_hooks.waiting_calls[0][1] == context.approval_request_id
+    assert runtime_hooks.stored_contexts[0].approval_request_id == context.approval_request_id
+    assert any(event_type == TraceEventType.APPROVAL_REQUESTED.value for _, event_type, _ in trace_recorder.events)
 
 
 def test_invalid_state_transition_raises_error() -> None:
@@ -175,7 +238,7 @@ def test_resume_after_approval_continues_to_completion() -> None:
     assert resumed.state is RunState.COMPLETED
     assert resumed.response_text == "response:retrieve_and_answer:1"
     assert runtime_hooks.resumed_calls == [context.task.run_id]
-    assert any(event_type == "run.resumed" for _, event_type, _ in trace_recorder.events)
+    assert any(event_type == TraceEventType.APPROVAL_RESOLVED.value for _, event_type, _ in trace_recorder.events)
     assert run_store.status_updates[-1][1] == "COMPLETED"
     assert approval_store.created_requests
 
@@ -189,7 +252,7 @@ def test_terminal_failure_marks_run_failed() -> None:
     assert context.failure_reason == "tool execution failed"
     assert run_store.status_updates[-1][1] == "FAILED"
     assert run_store.status_updates[-1][2] == "tool execution failed"
-    assert any(event_type == "run.failed" for _, event_type, _ in trace_recorder.events)
+    assert any(event_type == TraceEventType.RUN_FAILED.value for _, event_type, _ in trace_recorder.events)
     assert runtime_hooks.completed_calls[-1][1] is RunState.FAILED
 
 
@@ -198,3 +261,19 @@ def test_resume_requires_waiting_state() -> None:
 
     with pytest.raises(ApprovalResolutionError):
         engine.resume_after_approval(RunContext(task=make_task(), state=RunState.IN_PROGRESS))
+
+
+def test_rejected_approval_cancels_run() -> None:
+    engine, run_store, _, trace_recorder, runtime_hooks = build_engine(
+        requires_approval=True,
+        approval_decision=ApprovalDecision.REJECTED,
+    )
+    context = engine.start_run(make_task())
+
+    resumed = engine.resume_after_approval(context)
+
+    assert resumed.state is RunState.CANCELED
+    assert resumed.failure_reason == "Approval rejected"
+    assert run_store.status_updates[-1][1] == "CANCELED"
+    assert any(event_type == TraceEventType.APPROVAL_RESOLVED.value for _, event_type, _ in trace_recorder.events)
+    assert runtime_hooks.completed_calls[-1][1] is RunState.CANCELED

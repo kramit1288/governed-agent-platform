@@ -44,18 +44,20 @@ class RunRepository:
         self,
         run_id: UUID,
         *,
-        status: RunStatus,
+        status: RunStatus | str,
         last_error: str | None = None,
     ) -> Run | None:
         run = self.get_run(run_id)
         if run is None:
             return None
 
-        run.status = status
+        normalized_status = RunStatus(status)
+
+        run.status = normalized_status
         run.last_error = last_error
-        if status == RunStatus.IN_PROGRESS and run.started_at is None:
+        if normalized_status == RunStatus.IN_PROGRESS and run.started_at is None:
             run.started_at = datetime.now(timezone.utc)
-        if status in {RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELED}:
+        if normalized_status in {RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELED}:
             run.completed_at = datetime.now(timezone.utc)
         self._session.flush()
         return run
@@ -77,6 +79,14 @@ class RunRepository:
         self._session.add(event)
         self._session.flush()
         return event
+
+    def list_run_events(self, run_id: UUID) -> list[RunEvent]:
+        statement = (
+            select(RunEvent)
+            .where(RunEvent.run_id == run_id)
+            .order_by(RunEvent.sequence.asc())
+        )
+        return list(self._session.scalars(statement))
 
     def _next_sequence(self, run_id: UUID) -> int:
         statement = select(func.coalesce(func.max(RunEvent.sequence), 0) + 1).where(

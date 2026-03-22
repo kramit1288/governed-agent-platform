@@ -22,20 +22,30 @@ class ApprovalRepository:
         *,
         run_id: UUID,
         reason: str,
-        preview_payload: dict | None = None,
+        action_preview: dict | None = None,
         tool_invocation_id: UUID | None = None,
         expires_at: datetime | None = None,
     ) -> ApprovalRequest:
         approval_request = ApprovalRequest(
             run_id=run_id,
             reason=reason,
-            preview_payload=preview_payload,
+            action_preview=action_preview,
+            requested_at=datetime.now(timezone.utc),
             tool_invocation_id=tool_invocation_id,
             expires_at=expires_at,
         )
         self._session.add(approval_request)
         self._session.flush()
         return approval_request
+
+    def get_approval_request(self, approval_request_id: UUID) -> ApprovalRequest | None:
+        return self._session.get(ApprovalRequest, approval_request_id)
+
+    def get_approval_decision(self, approval_request_id: UUID) -> ApprovalStatus:
+        approval_request = self.get_approval_request(approval_request_id)
+        if approval_request is None:
+            raise LookupError("Approval request not found.")
+        return approval_request.status
 
     def resolve_approval_request(
         self,
@@ -47,6 +57,8 @@ class ApprovalRepository:
         approval_request = self._session.get(ApprovalRequest, approval_request_id)
         if approval_request is None:
             return None
+        if approval_request.status is not ApprovalStatus.PENDING:
+            raise ValueError("Approval request is not pending.")
 
         approval_request.status = status
         approval_request.decision_comment = decision_comment

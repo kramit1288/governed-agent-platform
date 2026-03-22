@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from db.enums import ApprovalStatus, EvalResultStatus, EvalRunStatus, RunStatus
+from db.enums import ApprovalStatus, EvalResultStatus, EvalRunStatus, RunStatus, ToolInvocationStatus
 from db.models import EvalCase
-from db.repositories import ApprovalRepository, EvalRepository, RunRepository
+from db.repositories import ApprovalRepository, EvalRepository, RunRepository, ToolInvocationRepository
 
 
 def test_run_repository_creates_and_updates_runs(session) -> None:
@@ -40,12 +40,21 @@ def test_run_repository_creates_and_updates_runs(session) -> None:
 def test_approval_repository_creates_and_resolves_requests(session) -> None:
     run_repository = RunRepository(session)
     approval_repository = ApprovalRepository(session)
+    tool_invocation_repository = ToolInvocationRepository(session)
 
     run = run_repository.create_run(workflow_key="ops.change")
+    invocation = tool_invocation_repository.create_tool_invocation(
+        run_id=run.id,
+        tool_name="draft_refund_request",
+        input_payload={"amount": 10},
+        requires_approval=True,
+        status=ToolInvocationStatus.APPROVAL_REQUIRED,
+    )
     approval_request = approval_repository.create_approval_request(
         run_id=run.id,
         reason="Production change",
-        preview_payload={"action": "restart"},
+        action_preview={"action": "restart"},
+        tool_invocation_id=invocation.id,
     )
     resolved_request = approval_repository.resolve_approval_request(
         approval_request.id,
@@ -59,6 +68,8 @@ def test_approval_repository_creates_and_resolves_requests(session) -> None:
     assert resolved_request is not None
     assert resolved_request.resolved_at is not None
     assert resolved_request.decision_comment == "Approved by reviewer"
+    assert resolved_request.action_preview == {"action": "restart"}
+    assert resolved_request.tool_invocation_id == invocation.id
 
 
 def test_eval_repository_creates_runs_and_results(session) -> None:
