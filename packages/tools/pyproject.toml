@@ -3,3 +3,7 @@ name = "governed-agent-tools"
 version = "0.1.0"
 description = "Tool schema and execution package."
 requires-python = ">=3.12"
+dependencies = [
+  "pydantic>=2.11,<3.0",
+  "pytest>=8.3,<9.0",
+]

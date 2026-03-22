@@ -1,0 +1,18 @@
+[
+  {
+    "ticket_id": "T-100",
+    "tenant_id": "tenant-1",
+    "customer_id": "C-100",
+    "subject": "Duplicate charge on March invoice",
+    "status": "open",
+    "priority": "high"
+  },
+  {
+    "ticket_id": "T-200",
+    "tenant_id": "tenant-2",
+    "customer_id": "C-200",
+    "subject": "Account access issue",
+    "status": "open",
+    "priority": "medium"
+  }
+]

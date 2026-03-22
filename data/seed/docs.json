@@ -1,0 +1,26 @@
+[
+  {
+    "doc_id": "DOC-100",
+    "tenant_id": "tenant-1",
+    "title": "Refund escalation policy",
+    "category": "policy",
+    "tags": ["refund", "billing"],
+    "content": "Refunds above 250 dollars require approval. Support should gather ticket context and customer history before drafting the request."
+  },
+  {
+    "doc_id": "DOC-101",
+    "tenant_id": "tenant-1",
+    "title": "Incident communication checklist",
+    "category": "runbook",
+    "tags": ["incident", "ops"],
+    "content": "During a payment outage, update the incident record, notify support leads, and post customer-safe status messaging."
+  },
+  {
+    "doc_id": "DOC-200",
+    "tenant_id": "tenant-2",
+    "title": "Tenant 2 support handbook",
+    "category": "policy",
+    "tags": ["support"],
+    "content": "Tenant 2 has separate escalation rules and should not appear in tenant 1 results."
+  }
+]

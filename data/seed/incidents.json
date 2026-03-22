@@ -1,0 +1,16 @@
+[
+  {
+    "incident_id": "INC-100",
+    "tenant_id": "tenant-1",
+    "title": "Card processor latency spike",
+    "severity": "sev-2",
+    "status": "monitoring"
+  },
+  {
+    "incident_id": "INC-200",
+    "tenant_id": "tenant-2",
+    "title": "Login service degradation",
+    "severity": "sev-3",
+    "status": "identified"
+  }
+]

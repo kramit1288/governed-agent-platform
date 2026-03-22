@@ -1,0 +1,18 @@
+[
+  {
+    "customer_id": "C-100",
+    "tenant_id": "tenant-1",
+    "name": "Avery Stone",
+    "email": "avery@example.com",
+    "plan": "business",
+    "currency": "USD"
+  },
+  {
+    "customer_id": "C-200",
+    "tenant_id": "tenant-2",
+    "name": "Jordan Reed",
+    "email": "jordan@example.net",
+    "plan": "starter",
+    "currency": "USD"
+  }
+]
