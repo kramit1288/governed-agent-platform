@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["apps/api/tests", "packages/db/tests", "packages/orchestrator/tests"]
+testpaths = ["apps/api/tests", "packages/db/tests", "packages/gateway/tests", "packages/orchestrator/tests"]
 
 [tool.ruff]
 line-length = 100
