@@ -82,6 +82,7 @@ This bootstrap currently includes:
 - a minimal FastAPI app with `/health`
 - initial PostgreSQL schema models and Alembic migration
 - focused repository methods for runs, approvals, and eval storage
+- pgvector-backed retrieval chunking, citations, and deterministic seed ingestion
 - explicit orchestrator state machine and lifecycle skeleton
 - API, db, and orchestrator pytest coverage
 - architecture docs and ADRs

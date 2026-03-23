@@ -1,10 +1,10 @@
-"""Local seeded document search for deterministic V1 retrieval-style lookups."""
+"""Document search tool backed by the retrieval package."""
 
 from __future__ import annotations
 
 from typing import Protocol
 
-from tools.implementations._seed_data import load_seed_records
+from retrieval import RetrievalFilter, RetrievalService
 from tools.schemas import SearchDocsFilters, SearchDocsInput, ToolExecutionOutput
 
 
@@ -21,8 +21,11 @@ class DocumentSearchBackend(Protocol):
         """Return matching document results."""
 
 
-class LocalSeedDocumentSearch:
-    """Simple seeded document search used by V1 tools and tests."""
+class RetrievalDocumentSearch:
+    """Adapter that exposes retrieval search to the tool layer."""
+
+    def __init__(self, retrieval_service: RetrievalService | None = None) -> None:
+        self._retrieval_service = retrieval_service or RetrievalService.from_seed_data()
 
     def search(
         self,
@@ -31,37 +34,36 @@ class LocalSeedDocumentSearch:
         tenant_id: str,
         filters: SearchDocsFilters | None,
     ) -> list[dict[str, object]]:
-        query_terms = {term for term in query.lower().split() if term}
-        matches: list[tuple[int, dict[str, object]]] = []
-        for document in load_seed_records("docs"):
-            if str(document["tenant_id"]) != tenant_id:
+        chunks, citations = self._retrieval_service.search(
+            query=query,
+            retrieval_filter=RetrievalFilter(
+                tenant_id=tenant_id,
+                source_type="support_doc",
+                top_k=10,
+            ),
+        )
+        results_by_doc: dict[str, dict[str, object]] = {}
+        for chunk, citation in zip(chunks, citations, strict=True):
+            if filters is not None and not _matches_filters(chunk.metadata, filters):
                 continue
-            if filters is not None and not _matches_filters(document, filters):
-                continue
-            searchable_text = f"{document['title']} {document['content']}".lower()
-            score = sum(1 for term in query_terms if term in searchable_text)
-            if score > 0:
-                matches.append(
-                    (
-                        score,
-                        {
-                            "doc_id": document["doc_id"],
-                            "title": document["title"],
-                            "category": document["category"],
-                            "tags": document["tags"],
-                            "snippet": str(document["content"])[:160],
-                            "score": score,
-                        },
-                    )
-                )
-        ordered = sorted(matches, key=lambda item: (-item[0], str(item[1]["doc_id"])))
-        return [result for _, result in ordered]
+            existing = results_by_doc.get(citation.source_id)
+            candidate = {
+                "doc_id": citation.source_id,
+                "title": citation.title,
+                "category": chunk.metadata.get("category"),
+                "tags": chunk.metadata.get("tags", []),
+                "snippet": citation.snippet,
+                "score": round(chunk.score, 6),
+            }
+            if existing is None or float(candidate["score"]) > float(existing["score"]):
+                results_by_doc[citation.source_id] = candidate
+        return sorted(results_by_doc.values(), key=lambda result: (-float(result["score"]), str(result["doc_id"])))
 
 
 def build_search_docs_tool(backend: DocumentSearchBackend | None = None):
     """Build a handler closure for document search."""
 
-    search_backend = backend or LocalSeedDocumentSearch()
+    search_backend = backend or RetrievalDocumentSearch()
 
     def handler(arguments: SearchDocsInput) -> ToolExecutionOutput:
         results = search_backend.search(
@@ -80,11 +82,11 @@ def build_search_docs_tool(backend: DocumentSearchBackend | None = None):
     return handler
 
 
-def _matches_filters(document: dict[str, object], filters: SearchDocsFilters) -> bool:
-    if filters.category is not None and document.get("category") != filters.category:
+def _matches_filters(metadata: dict[str, object], filters: SearchDocsFilters) -> bool:
+    if filters.category is not None and metadata.get("category") != filters.category:
         return False
     if filters.tags:
-        document_tags = {str(tag) for tag in document.get("tags", [])}
+        document_tags = {str(tag) for tag in metadata.get("tags", [])}
         if not set(filters.tags).issubset(document_tags):
             return False
     return True

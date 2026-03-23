@@ -37,6 +37,7 @@ Own tool schemas, permission checks, execution wrappers, and approval classifica
 ### Retrieval
 
 Owns document lookup, metadata filters, and citation packaging.
+It persists seeded document chunks in PostgreSQL with `pgvector` and keeps chunking and embedding boundaries explicit.
 
 ### Runtime
 

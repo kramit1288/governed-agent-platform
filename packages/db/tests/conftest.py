@@ -16,7 +16,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from db.base import Base
-from db.models import ApprovalRequest, EvalCase, EvalResult, EvalRun, PromptVersion, Run, RunEvent, ToolInvocation
+from db.models import ApprovalRequest, DocumentChunk, EvalCase, EvalResult, EvalRun, PromptVersion, Run, RunEvent, ToolInvocation
 
 
 @pytest.fixture()

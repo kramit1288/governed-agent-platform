@@ -66,6 +66,7 @@ def test_read_tools_execute_successfully_with_seeded_data() -> None:
     assert docs_result.status is ToolStatus.SUCCEEDED
     assert docs_result.output["result_count"] == 1
     assert docs_result.output["results"][0]["doc_id"] == "DOC-100"
+    assert docs_result.output["results"][0]["title"] == "Refund escalation policy"
 
 
 def test_risky_tool_returns_preview_and_requires_approval() -> None:
