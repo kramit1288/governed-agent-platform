@@ -1,0 +1,112 @@
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*.tmp
+.vscode/
+.idea/
+
+# ---- local guidance / private repo instructions ----
+AGENTS.md
+
+# ---- env / secrets ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets/
+.local/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.pyre/
+.hypothesis/
+.tox/
+.nox/
+
+# ---- Python virtual envs ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Python packaging / build ----
+build/
+dist/
+site/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+wheelhouse/
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+
+# ---- Node / Next.js ----
+node_modules/
+.next/
+out/
+dist/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- frontend env / local config ----
+apps/console/.env
+apps/console/.env.*
+!apps/console/.env.example
+
+# ---- Turbo / monorepo caches ----
+.turbo/
+
+# ---- Logs / temp ----
+logs/
+*.log
+tmp/
+temp/
+
+# ---- Database / local data ----
+*.sqlite
+*.db
+postgres-data/
+pgdata/
+
+# ---- Generated artifacts / reports ----
+reports/
+artifacts/
+eval-reports/
+screenshots/
+playwright-report/
+test-results/
+
+# ---- Docker ----
+docker-data/
+
+# ---- Generated seed outputs / runtime state ----
+data/generated/
+runtime-data/
+.local-state/
+
+# ---- Optional: keep seeded source data tracked, but ignore large downloaded blobs ----
+data/seed/**/*.bin
+data/seed/**/*.npy
+data/seed/**/*.parquet
+data/seed/**/*.feather
+
+# ---- If you add frontend build tools later ----
+*.tsbuildinfo

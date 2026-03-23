@@ -98,7 +98,9 @@ class OfflineEvalRunner:
             self._repository.update_eval_run_status(persisted_run.id, status=EvalRunStatus.FAILED)
             raise
 
-        report = build_report(run_name, model_name, results)
+        report = build_report(run_name, model_name, results).model_copy(
+            update={"eval_run_id": str(persisted_run.id)}
+        )
         if baseline_report is not None:
             report = report.model_copy(update={"regression": compare_reports(report, baseline_report)})
         return report
@@ -113,7 +115,7 @@ class OfflineEvalRunner:
                 case_key=str(result.eval_case.key),
                 passed=result.status is EvalResultStatus.PASSED,
                 summary=result.summary or "",
-                scorecard=result.details["scorecard"],
+                scorecard=ScoreCard.model_validate(result.details["scorecard"]),
                 response_text=result.details.get("response_text", ""),
                 tool_name=result.details.get("tool_name"),
                 requires_approval=bool(result.details.get("requires_approval", False)),

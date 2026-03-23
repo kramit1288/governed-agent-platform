@@ -29,6 +29,7 @@ class EvalRun(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    eval_run_id: str | None = None
     run_name: str
     model_name: str | None = None
     total_cases: int = Field(ge=0)

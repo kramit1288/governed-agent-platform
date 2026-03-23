@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from db.enums import ApprovalStatus
@@ -40,6 +41,18 @@ class ApprovalRepository:
 
     def get_approval_request(self, approval_request_id: UUID) -> ApprovalRequest | None:
         return self._session.get(ApprovalRequest, approval_request_id)
+
+    def list_for_run(self, run_id: UUID) -> list[ApprovalRequest]:
+        statement = (
+            select(ApprovalRequest)
+            .where(ApprovalRequest.run_id == run_id)
+            .order_by(ApprovalRequest.requested_at.asc())
+        )
+        return list(self._session.scalars(statement))
+
+    def get_latest_for_run(self, run_id: UUID) -> ApprovalRequest | None:
+        approvals = self.list_for_run(run_id)
+        return approvals[-1] if approvals else None
 
     def get_approval_decision(self, approval_request_id: UUID) -> ApprovalStatus:
         approval_request = self.get_approval_request(approval_request_id)

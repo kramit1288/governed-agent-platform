@@ -53,6 +53,17 @@ scripts/        Development and maintenance scripts
 5. Run tests with `make test`.
 6. Start the console with `make dev-console`.
 
+## Demo flow
+
+For the end-to-end V1 demo:
+
+1. Start the API and console.
+2. Open the console home page and submit a run such as `Summarize ticket T-100 for me.`
+3. Open the run detail page to inspect status, output, and the append-only trace timeline.
+4. Try a risky request such as `Draft a refund request for customer C-100 on ticket T-100 for 42.50.`
+5. Open the approval page, approve or reject the draft, and then return to the run detail page to inspect the resumed outcome.
+6. Trigger the offline eval suite from the home page and open the report detail page for pass/fail and regression summary data.
+
 ## Database foundation
 
 Phase 2 establishes the schema foundation in `packages/db` for:
@@ -79,10 +90,11 @@ The flow is deliberately narrow and testable. It is our own orchestration code, 
 
 This bootstrap currently includes:
 
-- a minimal FastAPI app with `/health`
+- a demoable FastAPI app with run, approval, trace, and eval endpoints
 - initial PostgreSQL schema models and Alembic migration
 - focused repository methods for runs, approvals, and eval storage
 - pgvector-backed retrieval chunking, citations, and deterministic seed ingestion
 - explicit orchestrator state machine and lifecycle skeleton
+- a minimal Next.js operator console for runs, approvals, traces, and eval reports
 - API, db, and orchestrator pytest coverage
 - architecture docs and ADRs
